@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Section 201 | Student Time Tracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <section id="accessGate" class="access-gate">
+    <div class="login-card">
+      <div class="login-mark">201</div>
+      <p class="eyebrow">SECTION 201</p>
+      <h1>Student Hours Portal</h1>
+      <p class="muted login-intro">Sign in as an administrator to manage records, or enter manpower viewer mode to view totals and reports only.</p>
+      <div class="access-tabs">
+        <button id="adminModeBtn" class="access-tab active" type="button">Admin sign in</button>
+        <button id="viewerModeBtn" class="access-tab" type="button">Manpower viewer</button>
+      </div>
+      <form id="adminLoginForm">
+        <div class="field">
+          <label for="loginUsername">Username</label>
+          <input id="loginUsername" type="text" autocomplete="username" required placeholder="Enter username">
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter password">
+        </div>
+        <div id="loginMessage" class="message error" aria-live="polite"></div>
+        <button class="button primary login-submit" type="submit">Sign in as admin</button>
+      </form>
+      <div id="viewerPrompt" class="viewer-prompt" hidden>
+        <p><strong>Manpower Viewer access</strong></p>
+        <p class="muted">View student totals, time-entry history, violation flags, and download reports. Editing, adding, and deleting records are disabled.</p>
+        <button id="enterViewerBtn" class="button primary login-submit" type="button">Continue as viewer</button>
+      </div>
+      <p class="login-footnote">This offline version stores data in this browser on this computer.</p>
+    </div>
+  </section>
+  <div id="appShell" hidden>
+  <div class="role-bar">
+    <span id="roleLabel">Signed in</span>
+    <button id="signOutBtn" class="button secondary" type="button">Sign out</button>
+  </div>
+  <header class="hero">
+    <div class="hero-content">
+      <p class="eyebrow">STUDENT HOURS MONITORING</p>
+      <h1>Section 201</h1>
+      <p class="subtitle">Student Time Tracker</p>
+      <div class="hero-stats">
+        <div class="stat"><span id="studentCount">0</span><small>Students</small></div>
+        <div class="stat"><span id="sessionCount">0</span><small>Time entries</small></div>
+        <div class="stat"><span id="totalHours">0h 0m</span><small>Total recorded</small></div>
+        <div class="stat"><span id="violationCount">0</span><small>Violations logged</small></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel admin-only" id="timeEntryPanel">
+      <div class="section-heading">
+        <div><p class="eyebrow">TIME IN / TIME OUT</p><h2>Record student hours</h2></div>
+        <span class="live-dot">Ready</span>
+      </div>
+      <p class="muted">Choose a student, enter the start and end time, then save. New entries are added to the student's previous hours.</p>
+
+      <div class="form-grid">
+        <div class="field full">
+          <label for="studentSearch">Find student</label>
+          <input id="studentSearch" type="search" placeholder="Search by student name…" autocomplete="off">
+          <div id="searchResults" class="search-results" role="listbox" aria-label="Student search results"></div>
+        </div>
+        <div class="field full">
+          <label for="selectedStudent">Selected student</label>
+          <input id="selectedStudent" type="text" placeholder="Select a student from search above" readonly>
+          <input id="selectedStudentId" type="hidden">
+        </div>
+        <div class="field">
+          <label for="startTime">Start time</label>
+          <input id="startTime" type="time" required>
+        </div>
+        <div class="field">
+          <label for="endTime">End time</label>
+          <input id="endTime" type="time" required>
+        </div>
+        <div class="field full">
+          <label for="entryDate">Date</label>
+          <input id="entryDate" type="date">
+        </div>
+      </div>
+      <div id="formMessage" class="message" aria-live="polite"></div>
+      <div class="actions">
+        <button id="saveEntry" class="button primary">＋ Add hours</button>
+        <button id="clearForm" class="button secondary">Clear fields</button>
+      </div>
+      <p class="tip"><strong>Overnight shift?</strong> If the end time is earlier than the start time, the calculator assumes the end time is on the following day.</p>
+    </section>
+
+
+    <section class="panel attendance-panel" id="attendancePanel">
+      <div class="section-heading">
+        <div><p class="eyebrow">DAILY DUTY ATTENDANCE</p><h2>Attendance and duty log</h2></div>
+        <div class="attendance-export-actions"><button id="downloadAttendance" class="button secondary" type="button">↓ Download attendance</button><button id="downloadFullBackup" class="button secondary" type="button">↓ Full data backup</button><button id="removeSavedPhotos" class="button danger" type="button">Free photo storage</button></div>
+      </div>
+      <p class="muted">Create one group duty log per date and shift. Each selected student signs individually, and the head who logged the duty signs before saving. The group photo is optional proof.</p>
+      <div class="form-grid admin-only" id="attendanceForm">
+        <div class="field"><label for="attendanceDate">Duty date</label><input id="attendanceDate" type="date"></div>
+        <div class="field"><label for="attendanceShift">Shift</label><select id="attendanceShift"><option value="Morning">Morning shift</option><option value="Afternoon">Afternoon shift</option></select></div>
+        <div class="field"><label for="attendanceStart">Start time</label><input id="attendanceStart" type="time" required></div>
+        <div class="field"><label for="attendanceEnd">End time</label><input id="attendanceEnd" type="time" required></div>
+        <div class="field full"><label for="attendanceHeadName">Head / person logging attendance</label><input id="attendanceHeadName" type="text" maxlength="120" placeholder="Enter head's full name"></div>
+        <div class="field full"><label for="attendanceStudentSearch">Find students to include</label><input id="attendanceStudentSearch" type="search" placeholder="Search roster, then tick each person who was on duty"><div id="attendanceStudentList" class="attendance-student-list"></div></div>
+        <div class="field full"><label>Individual signatures</label><div id="attendanceSignatureList" class="signature-list"><span class="muted">Select students above to add their signatures.</span></div></div>
+        <div class="field full"><label for="attendancePhoto">Group photo (optional)</label><input id="attendancePhoto" type="file" accept="image/*"><small class="muted">Choose one group photo as duty proof. The image will be resized/compressed before saving.</small><div id="attendancePhotoPreview" class="photo-preview"></div></div>
+        <div class="field full"><label>Head's signature</label><div class="signature-actions"><span id="headSignatureStatus" class="muted">Not signed</span><button id="signHeadBtn" class="button secondary" type="button">Capture head signature</button></div></div>
+        <div class="field full"><div id="attendanceMessage" class="message" aria-live="polite"></div><div class="actions"><button id="saveAttendance" class="button primary" type="button">＋ Save duty attendance</button><button id="clearAttendance" class="button secondary" type="button">Clear attendance form</button></div></div>
+      </div>
+      <div class="section-heading attendance-history-heading"><div><h3>Saved duty logs</h3></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Shift</th><th>Time</th><th>Students on duty</th><th>Head</th><th>Proof</th><th>Action</th></tr></thead><tbody id="attendanceBody"></tbody></table></div>
+      <div id="emptyAttendance" class="empty-state show">No duty attendance logs recorded yet.</div>
+    </section>
+
+    <section class="panel roster-panel">
+      <div class="section-heading roster-heading">
+        <div><p class="eyebrow">CLASS ROSTER</p><h2>Student list</h2></div>
+        <button id="downloadCsv" class="button primary">↓ Download list (CSV)</button>
+      </div>
+      <div class="toolbar">
+        <div class="field search-field">
+          <label for="rosterSearch">Search roster</label>
+          <input id="rosterSearch" type="search" placeholder="Type a name to filter the list…">
+        </div>
+        <div class="field">
+          <label for="sortBy">Sort by</label>
+          <select id="sortBy">
+            <option value="name">Student name</option>
+            <option value="hours">Total hours (highest first)</option>
+            <option value="entries">Number of entries</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Student name</th><th>Entries</th><th>Total hours</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="rosterBody"></tbody>
+        </table>
+      </div>
+      <p class="muted small">Hours are saved in this browser on this device. Export a CSV regularly to keep a backup or open the list in Excel.</p>
+    </section>
+
+    <section class="panel violation-panel admin-only">
+      <div class="section-heading">
+        <div><p class="eyebrow">STUDENT CONDUCT RECORD</p><h2>Violation list</h2></div>
+        <button id="downloadViolations" class="button danger">↓ Download violations</button>
+      </div>
+      <p class="muted">Log a violation with a date and description. Students with at least one logged violation will be highlighted in red in the roster and search results.</p>
+      <div class="form-grid">
+        <div class="field full">
+          <label for="violationStudentSearch">Find student</label>
+          <input id="violationStudentSearch" type="search" placeholder="Search student name…" autocomplete="off">
+          <div id="violationSearchResults" class="search-results" role="listbox" aria-label="Violation student search results"></div>
+        </div>
+        <div class="field full">
+          <label for="violationStudent">Selected student</label>
+          <input id="violationStudent" type="text" placeholder="Select a student from search above" readonly>
+        </div>
+        <div class="field">
+          <label for="violationType">Violation type</label>
+          <select id="violationType">
+            <option value="Late">Late</option>
+            <option value="Absent">Absent</option>
+            <option value="Uniform / ID">Uniform / ID</option>
+            <option value="Misconduct">Misconduct</option>
+            <option value="Incomplete task">Incomplete task</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="violationDate">Date</label>
+          <input id="violationDate" type="date">
+        </div>
+        <div class="field full">
+          <label for="violationNotes">Details / remarks</label>
+          <input id="violationNotes" type="text" maxlength="250" placeholder="Briefly describe what happened (optional)">
+        </div>
+      </div>
+      <div id="violationMessage" class="message" aria-live="polite"></div>
+      <div class="actions"><button id="saveViolation" class="button danger">＋ Record violation</button><button id="clearViolation" class="button secondary">Clear fields</button></div>
+      <div class="table-wrap violation-table-wrap">
+        <table><thead><tr><th>Date</th><th>Student</th><th>Violation</th><th>Details</th><th>Action</th></tr></thead><tbody id="violationsBody"></tbody></table>
+      </div>
+      <div id="emptyViolations" class="empty-state show">No violations recorded.</div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">ENTRY HISTORY</p><h2>Recorded sessions</h2></div>
+        <button id="downloadEntries" class="button secondary">↓ Download sessions</button>
+      </div>
+      <div class="toolbar">
+        <div class="field search-field">
+          <label for="historySearch">Find in history</label>
+          <input id="historySearch" type="search" placeholder="Search student name or date…">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Student</th><th>Start</th><th>End</th><th>Duration</th><th>Action</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+      <div id="emptyHistory" class="empty-state">No sessions recorded yet. Select a student above to add the first entry.</div>
+    </section>
+    <footer>Section 201 · Student Time Tracker <span>Made for easy classroom hour monitoring</span></footer>
+  </main>
+
+  <div id="signatureModal" class="modal-backdrop" hidden>
+    <div class="modal-card signature-modal" role="dialog" aria-modal="true" aria-labelledby="signatureTitle">
+      <div class="section-heading"><div><p class="eyebrow">SIGNATURE CAPTURE</p><h2 id="signatureTitle">Sign below</h2></div><button id="closeSignature" class="button secondary" type="button">Close</button></div>
+      <p id="signatureDescription" class="muted">Use a mouse, touchpad, or finger on the signature area.</p>
+      <canvas id="signatureCanvas" width="700" height="220" aria-label="Signature drawing area"></canvas>
+      <div class="actions"><button id="clearSignature" class="button secondary" type="button">Clear signature</button><button id="saveSignature" class="button primary" type="button">Use this signature</button></div>
+    </div>
+  </div>
+  <div id="profileModal" class="modal-backdrop" hidden>
+    <div class="modal-card profile-modal" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+      <div class="section-heading"><div><p class="eyebrow">STUDENT PROFILE</p><h2 id="profileTitle">Student profile</h2></div><button id="closeProfile" class="button secondary" type="button">Close</button></div>
+      <div id="profileContent"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  </div><!-- appShell -->
+</body>
+</html>
